@@ -15,12 +15,12 @@
 2. Create a workspace directory on your computer. 
     - Open your terminal
     - Navigate to a folder to build your workspace in. Example: `ls` (to see current files) & `cd <folder_you_want_to_go_into>`.
-    - Once at your desired folder location, create your workspace directory and src folder: `mkdir -p ./racerbot_ws/src`
-    - Go into your workspace: `cd racerbot_ws`
-3. Start the docker container in interactive mode (on the current terminal) with a bind mount to the workspace you just created: `docker run -it -v ./src/:/racerbot_ws/src/ --name racerbot ros:humble` (`./` is from your current directory, you could also use the absolute path to your workspace instead: `docker run -it -v /full/path/to/racerbot_ws/src/:/racerbot_ws/src/ --name racerbot ros:humble`)
-    - It is key you understand `-v ./src/:/racerbot_ws/src/` **creates a bind mount from your host folder** (`full/path/to/racerbot_ws/src/`) **to the container folder** (`/racerbot_ws/src/`), so any changes you make on the host or inside the container are immediately reflected in the other.
+    - Once at your desired folder location, create your workspace directory and src folder: `mkdir -p ./lab1_ws/src`
+    - Go into your workspace: `cd lab1_ws`
+3. Start the docker container in interactive mode (on the current terminal) with a bind mount to the workspace you just created: `docker run -it -v ./src/:/lab1_ws/src/ --name lab1 ros:humble` (`./` is from your current directory, you could also use the absolute path to your workspace instead: `docker run -it -v /full/path/to/lab1_ws/src/:/lab1_ws/src/ --name lab1 ros:humble`)
+    - It is key you understand `-v ./src/:/lab1_ws/src/` **creates a bind mount from your host folder** (`full/path/to/lab1_ws/src/`) **to the container folder** (`/lab1_ws/src/`), so any changes you make on the host or inside the container are immediately reflected in the other.
 4. Your terminal is now inside the container you built!
-5. If you close your terminal/container you can re-run it using `docker start -i racerbot_ws`. If you want to delete your container do: `docker rm racerbot_ws`.
+5. If you close your terminal/container you can re-run it using `docker start -i lab1`. If you want to delete your container do: `docker rm lab1`.
 
 ## 2: Set Up TMUX
 1. `tmux` is recommended when you're working inside a container. It allows you to have multiple `bash` sessions in the same terminal window which is very convenient when working inside containers.
@@ -53,23 +53,23 @@ You should see two topics listed:
 1. Make sure you are in the right directories for each command (I have included the `cd` needed for each). If your workspace doesn't look like step `5.` then instead of deleting directories or moving stuff, please restart the whole process (delete your container). Be careful your new container isn't nested, as there is a common bug that causes this.
 2. Create the `lab1_pkg` with `ackermann_msgs` as a dependency:
 ```bash
-cd /racerbot_ws/src
+cd /lab1_ws/src
 ros2 pkg create lab1_pkg --build-type ament_cmake --dependencies ackermann_msgs
 ```
 3. Install dependencies with `rosdep`:
 ```bash
-cd /racerbot_ws
+cd /lab1_ws
 rosdep update
 rosdep install --from-paths src --ignore-src -r -y
 ```
 4. Build:
 ```bash
-cd /racerbot_ws
+cd /lab1_ws
 colcon build
 ```
 5. After build, your workspace should look like:
 ```bash
-racerbot_ws/
+lab1_ws/
 ├── src/
 │   └── lab1_pkg/
 ├── build/
@@ -92,7 +92,7 @@ The second node will be named `relay.cpp` and needs to meet this criteria:
 
 **Instructions**:
 1. **Editing code inside container**:
-    - We will now need to code! Since the container is mounted to your host machine, you can make changes on your host machine and they will change in your container. Thus, I recommend you use `VSCode` and open the folder `racerbot_ws` in `VSCode`. If you want to set up `VSCode` extensions for ROS 2, click [here](https://docs.ros.org/en/humble/How-To-Guides/Setup-ROS-2-with-VSCode-and-Docker-Container.html). If you want to code in the terminal instead, you can use `vim` by doing `apt update` and `apt install -y vim` or you can use `nano` by doing `apt update` and `apt install -y nano`.
+    - We will now need to code! Since the container is mounted to your host machine, you can make changes on your host machine and they will change in your container. Thus, I recommend you use `VSCode` and open the folder `lab1_ws` in `VSCode`. If you want to set up `VSCode` extensions for ROS 2, click [here](https://docs.ros.org/en/humble/How-To-Guides/Setup-ROS-2-with-VSCode-and-Docker-Container.html). If you want to code in the terminal instead, you can use `vim` by doing `apt update` and `apt install -y vim` or you can use `nano` by doing `apt update` and `apt install -y nano`.
 2. **Adding Dependencies**:
     - To send and receive our message, we use the `ackermann_msgs` dependency but later we may use others like `std_msgs` and `geometry_msgs`. The core concepts should remain the same. For this lab, we already have that dependency working when we created our package. However, we **do need** another dependency called `rclcpp`. 
     - To add a dependency in an existing package, you need to add `<depend>rclcpp</depend>` to the `package.xml` file and add `find_package(rclcpp REQUIRED)` to the `CMakeLists.txt` file. You should add them below the existing lines for your other dependencies, **do not put them at the bottom of the file** and keep it organized.
@@ -112,22 +112,22 @@ The second node will be named `relay.cpp` and needs to meet this criteria:
 6. To run, we will use `tmux` and make 3 new terminals, giving us 4 in total to work with. The reason we need multiple terminals is that we cannot run commands on a terminal that is actively running a node.
 - In first terminal **run the talker node**, setting your velocity and direction parameters:
     ```
-    cd /racerbot_ws && source install/local_setup.bash
+    cd /lab1_ws && source install/local_setup.bash
     ros2 run lab1_pkg talker --ros-args -p v:=2.0 -p d:=0.5
     ```
 - In the second terminal **run the relay node**:
     ```
-    cd /racerbot_ws && source install/local_setup.bash
+    cd /lab1_ws && source install/local_setup.bash
     ros2 run lab1_pkg relay
     ```
 - In the third terminal **listen to the drive talker**:
     ```
-    cd /racerbot_ws && source install/local_setup.bash
+    cd /lab1_ws && source install/local_setup.bash
     ros2 topic echo /drive
     ```
 - In the fourth terminal **listen to the drive relay**:
     ```
-    cd /racerbot_ws && source install/local_setup.bash
+    cd /lab1_ws && source install/local_setup.bash
     ros2 topic echo /drive_relay
     ```
 7. From the drive talker (third terminal) you should see:
@@ -167,12 +167,12 @@ install(
 4. Build using `colcon` (shouldn't need `rosdep` since no dependencies were added)
 5. Now in one terminal launch it:
 ```
-cd /racerbot_ws && source install/local_setup.bash
+cd /lab1_ws && source install/local_setup.bash
 ros2 launch lab1_pkg lab1_launch.py
 ```
 6. In another terminal (always `tmux` so we stay in the container environment) you can run these two one at a time (`ctrl+c` to stop the first and then run the second so we only use two terminals!)
 ```
-cd /racerbot_ws && source install/local_setup.bash
+cd /lab1_ws && source install/local_setup.bash
 ros2 topic echo /drive
 ros2 topic echo /drive_relay
 ```
